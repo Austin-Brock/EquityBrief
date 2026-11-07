@@ -86,6 +86,8 @@ export default function ChatPage() {
           return [...cur, { kind: "assistant", text: e.text }];
         case "error":
           return [...cur, { kind: "error", text: e.message }];
+        default:
+          return cur; // trace events etc.
       }
     });
   }

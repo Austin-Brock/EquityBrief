@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EquityBrief</title>
+<style>
+  @page { size: 13.333in 7.5in; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 13.333in; height: 7.5in; }
+  body {
+    font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #1c1c1a; background: #fff;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .slide { width: 100%; height: 100%; padding: 0.55in 0.65in 0.5in; display: flex; flex-direction: column; }
+
+  .brand { font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #2d5bd7; }
+  h1 { font-size: 34px; line-height: 1.15; font-weight: 700; letter-spacing: -0.015em; margin-top: 8px; max-width: 11in; }
+  h1 span { color: #2d5bd7; }
+
+  .cols { flex: 1; display: grid; grid-template-columns: 1fr 1.18fr 1fr; gap: 0.28in; margin-top: 0.38in; }
+  .col { border-radius: 12px; padding: 0.24in 0.26in; display: flex; flex-direction: column; }
+  .problem { background: #f4f4f1; }
+  .built   { background: #eef3ff; border: 1.5px solid #c9d7fb; }
+  .trust   { background: #eaf6ef; }
+  .label { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 8px; }
+  .problem .label { color: #6b6b66; } .built .label { color: #2d5bd7; } .trust .label { color: #1f7a4d; }
+  h2 { font-size: 19px; line-height: 1.25; font-weight: 650; margin-bottom: 12px; }
+  ul { list-style: none; }
+  li { position: relative; padding-left: 16px; font-size: 15.5px; line-height: 1.38; margin-bottom: 9px; }
+  li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 6px; height: 6px; border-radius: 50%; }
+  .problem li::before { background: #9a9a92; } .built li::before { background: #2d5bd7; } .trust li::before { background: #1f7a4d; }
+  b { font-weight: 650; }
+
+  .quote { font-size: 16px; font-style: italic; background: #fff; border-radius: 8px; padding: 10px 12px; margin: 2px 0 12px; border-left: 3px solid #2d5bd7; }
+  .lead { font-size: 14px; color: #4a4a46; margin-bottom: 8px; }
+  .example { margin-top: auto; font-size: 13.5px; color: #2d5bd7; background: #fff; border-radius: 8px; padding: 8px 12px; }
+  .example b { color: #1c1c1a; }
+
+  .next { margin-top: 0.26in; display: flex; align-items: center; gap: 14px; border-top: 1.5px solid #e2e2dc; padding-top: 0.18in; }
+  .next .label { margin: 0; color: #6b6b66; white-space: nowrap; }
+  .chips { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip { font-size: 14.5px; background: #f4f4f1; border-radius: 99px; padding: 6px 14px; }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="brand">EquityBrief</div>
+  <h1>Get up to speed on any company in under a minute, <span>with a source for every fact.</span></h1>
+
+  <div class="cols">
+    <section class="col problem">
+      <div class="label">The problem</div>
+      <h2>Advisors don't have time to read before client meetings</h2>
+      <ul>
+        <li>Key facts are scattered: today's price in one place, the company's annual report in another</li>
+        <li>That annual report is often <b>100+ pages</b> of dense legal and financial language</li>
+        <li>What advisors tell clients must be <b>accurate and traceable</b></li>
+      </ul>
+    </section>
+
+    <section class="col built">
+      <div class="label">What we built</div>
+      <h2>Enter a stock ticker (e.g. AAPL)</h2>
+      <div class="lead">You get, in about 15 seconds:</div>
+      <ul>
+        <li><b>Today's stock price</b></li>
+        <li><b>A one-page summary</b> of the latest annual report: business, key financials, top risks, management's view, what to watch</li>
+        <li><b>Talking points</b> and <b>questions the client may ask</b></li>
+      </ul>
+      <div class="example"><b>Example:</b> Apple revenue $478.8B, up 15%; iPhone sales up 21%</div>
+    </section>
+
+    <section class="col trust">
+      <div class="label">Built for trust</div>
+      <h2>Every claim can be checked</h2>
+      <ul>
+        <li><b>Every point is sourced</b> to the exact section of the official SEC filing</li>
+        <li><b>Quotes are checked automatically</b>, and anything unverified is flagged</li>
+        <li><b>Facts only:</b> no guesses, no buy/sell advice</li>
+        <li><b>Honest about limits:</b> missing information is flagged, not filled in</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="next">
+    <div class="label">Coming next</div>
+    <div class="chips">
+      <span class="chip">PDF download</span>
+      <span class="chip">Agentic Solution</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

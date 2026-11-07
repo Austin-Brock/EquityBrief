@@ -21,6 +21,18 @@ npm run dev                  # http://localhost:3000
 | `SEC_USER_AGENT` | SEC requires `"AppName contact@email"`; requests without it get 403s. |
 | `OPENAI_API_KEY` / `OPENAI_MODEL` | Defaults to `gpt-4.1-mini`. |
 
+## Deploying (Vercel)
+
+1. Import the GitHub repo in Vercel (or run `vercel link`). Pushes to `main` deploy to production.
+2. Add environment variables under **Settings → Environment Variables**, scoped to **Production** (and Preview if you want preview deploys to work):
+   - `ALPACA_API_KEY_ID`, `ALPACA_API_SECRET_KEY` (these exact names; not Alpaca's `APCA_*` naming)
+   - `SEC_USER_AGENT`
+   - `OPENAI_API_KEY`
+   - Optional: `ALPACA_DATA_FEED` (default `iex`), `OPENAI_MODEL` (default `gpt-4.1-mini`)
+3. **Redeploy after changing variables.** Vercel only applies them to new deployments.
+
+The site is public with no login, so every request spends the OpenAI key. Set a monthly spend limit on the OpenAI account.
+
 ## How it works
 
 ```
@@ -50,6 +62,8 @@ The agent loop is hand-written on OpenAI tool calling, with no agent framework (
 | `search_filing` | Keyword search over Items 1, 1A, 7 for follow-up questions |
 
 Tool errors are returned to the model as data, so it can say what's unavailable instead of failing. See `docs/architecture.html` for a diagram.
+
+**Tracing:** send `"debug": true` in the `/api/chat` request body to also stream trace events: each model call's chosen tools, arguments, token counts, and timings. `docs/agent-trace-example.html` is a rendered trace of a real request ("Tell me what I should know about Microsoft for my 10am meeting").
 
 ## Design decisions
 
@@ -118,3 +132,9 @@ Since a 10-K brief is identical for every advisor and changes once a year, the s
 5. **Smaller tool results for the agent:** send bullet text + Item only (~750 vs ~2,050 tokens per brief); the UI keeps the full version.
 6. **Better filing search:** embeddings-based retrieval instead of keyword matching for `search_filing`.
 7. Evaluation set: spot-check briefs against filings and track the evidence-verification rate as a quality metric.
+
+## Docs
+
+- `docs/architecture.html`: architecture diagram
+- `docs/agent-trace-example.html`: visualized agent trace
+- `docs/pitch/EquityBrief-pitch.pdf`: one-slide pitch for non-technical stakeholders (source: `docs/pitch/slide.html`; text and speaker notes: `docs/pitch-deck.md`)

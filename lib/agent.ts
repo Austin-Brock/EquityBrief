@@ -8,7 +8,19 @@ export type ChatTurn = { role: "user" | "assistant"; content: string };
 
 export type AgentEvent =
   | { type: "tool_start"; id: string; name: string; args: Record<string, unknown> }
-  | { type: "tool_result"; id: string; name: string; output: unknown }
+  | { type: "tool_result"; id: string; name: string; output: unknown; ms?: number }
+  // Debug-only trace events (opt-in via { debug: true }); the UI ignores them.
+  | { type: "trace_start"; model: string; system: string; history: ChatTurn[] }
+  | {
+      type: "trace_step";
+      step: number;
+      ms: number;
+      promptTokens?: number;
+      completionTokens?: number;
+      finishReason: string;
+      content: string | null;
+      toolCalls: { id: string; name: string; args: string }[];
+    }
   | { type: "text"; text: string }
   | { type: "error"; message: string };
 
@@ -28,13 +40,21 @@ Rules:
 - Quote data comes from Alpaca's IEX feed and may differ slightly from consolidated prices.
 - Format: plain text with short paragraphs and "- " bullets. No markdown headings, bold, or tables.`;
 
-export async function runAgent(history: ChatTurn[], emit: (e: AgentEvent) => void): Promise<void> {
+export async function runAgent(
+  history: ChatTurn[],
+  emit: (e: AgentEvent) => void,
+  { debug = false } = {},
+): Promise<void> {
   const openai = new OpenAI();
-  const messages: Msg[] = [{ role: "system", content: system() }, ...history];
+  const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
+  const sys = system();
+  const messages: Msg[] = [{ role: "system", content: sys }, ...history];
+  if (debug) emit({ type: "trace_start", model, system: sys, history });
 
   for (let step = 0; step < MAX_STEPS; step++) {
+    const t0 = Date.now();
     const res = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
+      model,
       messages,
       tools: TOOLS,
       parallel_tool_calls: true,
@@ -43,6 +63,18 @@ export async function runAgent(history: ChatTurn[], emit: (e: AgentEvent) => voi
     messages.push(msg);
 
     const calls = (msg.tool_calls ?? []).filter((c) => c.type === "function");
+    if (debug) {
+      emit({
+        type: "trace_step",
+        step: step + 1,
+        ms: Date.now() - t0,
+        promptTokens: res.usage?.prompt_tokens,
+        completionTokens: res.usage?.completion_tokens,
+        finishReason: res.choices[0].finish_reason,
+        content: msg.content,
+        toolCalls: calls.map((c) => ({ id: c.id, name: c.function.name, args: c.function.arguments })),
+      });
+    }
     if (calls.length === 0) {
       emit({ type: "text", text: msg.content ?? "" });
       return;
@@ -58,8 +90,9 @@ export async function runAgent(history: ChatTurn[], emit: (e: AgentEvent) => voi
           /* model sent malformed JSON; tool will report the missing args */
         }
         emit({ type: "tool_start", id: call.id, name: call.function.name, args });
+        const t1 = Date.now();
         const output = await runTool(call.function.name, args);
-        emit({ type: "tool_result", id: call.id, name: call.function.name, output });
+        emit({ type: "tool_result", id: call.id, name: call.function.name, output, ms: Date.now() - t1 });
         return { role: "tool", tool_call_id: call.id, content: JSON.stringify(output) };
       }),
     );

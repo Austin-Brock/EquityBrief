@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         }
       };
       try {
-        await runAgent(history, emit);
+        await runAgent(history, emit, { debug: body?.debug === true });
       } catch (e) {
         console.error(e);
         emit({ type: "error", message: (e as Error).message });
