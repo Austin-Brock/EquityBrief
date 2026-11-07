@@ -137,4 +137,4 @@ Since a 10-K brief is identical for every advisor and changes once a year, the s
 
 - `docs/architecture.html`: architecture diagram
 - `docs/agent-trace-example.html`: visualized agent trace
-- `docs/pitch/EquityBrief-pitch.pdf`: one-slide pitch for non-technical stakeholders (source: `docs/pitch/slide.html`; text and speaker notes: `docs/pitch-deck.md`)
+- `docs/pitch/EquityBrief-pitch_deck.pdf`: one-slide pitch for non-technical stakeholders (source: `docs/pitch/slide.html`; text and speaker notes: `docs/pitch-deck.md`)
