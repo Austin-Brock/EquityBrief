@@ -18,6 +18,7 @@ export type Quote = {
 };
 
 export async function getQuote(symbol: string): Promise<Quote> {
+  symbol = symbol.toUpperCase().replace(/-/g, "."); // SEC writes BRK-B; Alpaca expects BRK.B
   const key = process.env.ALPACA_API_KEY_ID;
   const secret = process.env.ALPACA_API_SECRET_KEY;
   if (!key || !secret) throw new Error("Alpaca credentials are not configured");

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EquityBrief — Architecture</title>
+<style>
+  :root {
+    --ink: #1c1c1a; --muted: #6b6b66; --line: #d6d6d0; --bg: #f7f7f5; --card: #fff;
+    --new: #2d5bd7; --new-bg: #eef3ff; --ext: #8a5a00; --ext-bg: #fff7e6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.45 ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 40px 24px 64px; }
+  h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 40px 0 12px; }
+  p.sub { color: var(--muted); margin: 0 0 20px; }
+  .legend { display: flex; gap: 18px; font-size: 13px; color: var(--muted); margin-bottom: 28px; flex-wrap: wrap; }
+  .legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px;
+                         margin-right: 6px; vertical-align: -1px; border: 1.5px solid var(--line); background: var(--card); }
+  .legend .l-new::before { border: 1.5px dashed var(--new); background: var(--new-bg); }
+  .legend .l-ext::before { border-color: var(--ext); background: var(--ext-bg); }
+
+  .layer { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 16px; background: #fbfbf9; }
+  .layer > .label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 10px; }
+  .row { display: grid; gap: 12px; }
+  .c2 { grid-template-columns: repeat(2, 1fr); }
+  .c3 { grid-template-columns: repeat(3, 1fr); }
+  .c5 { grid-template-columns: repeat(5, 1fr); }
+  .box { background: var(--card); border: 1.5px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .box b { display: block; font-size: 14px; }
+  .box code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
+  .box small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .new { border: 1.5px dashed var(--new); background: var(--new-bg); }
+  .new b { color: var(--new); }
+  .ext { border-color: var(--ext); background: var(--ext-bg); }
+  .ext b { color: var(--ext); }
+  .tool b { font: 600 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .arrow { text-align: center; color: var(--muted); font-size: 13px; padding: 6px 0; }
+  .arrow::before { content: "↓"; display: block; font-size: 20px; line-height: 1; color: #a8a8a0; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .agent { margin-top: 12px; }
+  .agent .tools { margin-top: 10px; }
+
+  ol.flow { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  ol.flow li { counter-increment: s; background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+               padding: 10px 12px 10px 44px; position: relative; }
+  ol.flow li::before { content: counter(s); position: absolute; left: 12px; top: 10px; width: 22px; height: 22px;
+                       border-radius: 50%; background: var(--ink); color: #fff; font-size: 12px; font-weight: 600;
+                       display: grid; place-items: center; }
+  ol.flow code { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; background: #f0f0ec; padding: 1px 5px; border-radius: 4px; }
+  .muted { color: var(--muted); }
+  @media (max-width: 760px) { .c3, .c5, .split, .c2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>EquityBrief: Architecture</h1>
+  <p class="sub">Next.js app with two entry points: the existing ticker brief page and a new agentic chat page that reuses the same pipeline through tool calls. The agent loop is hand-written on the OpenAI SDK, with no agent framework.</p>
+  <div class="legend">
+    <span>Existing</span><span class="l-new">New (to build)</span><span class="l-ext">External service</span>
+  </div>
+
+  <!-- Browser -->
+  <div class="layer">
+    <div class="label">Browser</div>
+    <div class="row c2">
+      <div class="box"><b>Brief page</b><code>app/page.tsx</code><small>Ticker in → quote card + 10-K brief</small></div>
+      <div class="box new"><b>Chat page</b><code>app/chat/page.tsx</code><small>“Tell me what I should know about Apple for my 10am.” Reads the NDJSON event stream; renders tool results as the same QuoteCard / BriefView cards.</small></div>
+    </div>
+  </div>
+  <div class="split">
+    <div class="arrow">GET /api/brief?ticker=</div>
+    <div class="arrow">POST /api/chat → NDJSON event stream</div>
+  </div>
+
+  <!-- Server -->
+  <div class="layer">
+    <div class="label">Next.js server (route handlers)</div>
+    <div class="row c2">
+      <div class="box"><b>Brief route</b><code>app/api/brief/route.ts</code><small>Fixed pipeline, one request → one brief</small></div>
+      <div class="box new"><b>Chat route + agent loop</b><code>app/api/chat/route.ts · lib/agent.ts</code><small>Hand-written loop on OpenAI tool calling (~60 lines), max 6 steps. Streams <code>tool_start</code> / <code>tool_result</code> / <code>text</code> events. System prompt: tool data only, cite Items, no advice.</small></div>
+    </div>
+    <div class="agent">
+      <div class="box new">
+        <b>Agent tools</b><code>lib/tools.ts</code>
+        <div class="row c5 tools">
+          <div class="box tool"><b>resolve_company</b><small>“Apple” → AAPL / CIK, or candidates if ambiguous</small></div>
+          <div class="box tool"><b>get_stock_quote</b><small>Latest price, change, day range</small></div>
+          <div class="box tool"><b>get_sec_filings</b><small>Recent 10-K / 10-Q list + links</small></div>
+          <div class="box tool"><b>summarize_10k</b><small>Returns the verified, cited brief</small></div>
+          <div class="box tool"><b>search_filing</b><small>Relevant paragraphs for follow-ups (optional)</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="arrow">both entry points call the same shared code</div>
+
+  <!-- Shared lib -->
+  <div class="layer">
+    <div class="label">Shared library</div>
+    <div class="box new" style="margin-bottom:12px"><b>Brief orchestrator</b><code>lib/brief.ts</code><small>Extracted from the brief route. Runs ticker → filing → sections → summary, with the cache keyed by 10-K accession number.</small></div>
+    <div class="row c3">
+      <div class="box"><b>Quotes</b><code>lib/alpaca.ts</code><small>Snapshot → price, bid/ask, day bars (IEX labeled)</small></div>
+      <div class="box"><b>Filings</b><code>lib/edgar.ts</code><small>Ticker → CIK, latest 10-K, HTML → text, Items 1 / 1A / 7</small></div>
+      <div class="box"><b>Summarizer</b><code>lib/summarize.ts</code><small>Structured-output brief + verbatim-evidence check</small></div>
+    </div>
+  </div>
+  <div class="arrow">HTTPS</div>
+
+  <!-- External -->
+  <div class="layer">
+    <div class="label">External services</div>
+    <div class="row c3">
+      <div class="box ext"><b>Alpaca Market Data</b><code>data.alpaca.markets/v2</code><small>API key + secret · IEX feed (free)</small></div>
+      <div class="box ext"><b>SEC EDGAR</b><code>sec.gov · data.sec.gov</code><small>No key · User-Agent with contact email · ≤10 req/s</small></div>
+      <div class="box ext"><b>OpenAI</b><code>gpt-4.1-mini</code><small>Agent reasoning + 10-K summarization</small></div>
+    </div>
+  </div>
+
+  <h2>Example: “Tell me what I should know about Apple for my 10am meeting”</h2>
+  <ol class="flow">
+    <li>Chat page POSTs the conversation to <code>/api/chat</code>; the route opens a stream and runs <code>lib/agent.ts</code>.</li>
+    <li>Model calls <code>resolve_company("Apple")</code> → Apple Inc., AAPL, CIK 320193.</li>
+    <li>Model calls <code>get_stock_quote("AAPL")</code> and <code>summarize_10k("AAPL")</code> in parallel. <span class="muted">The 10-K summary takes ~10–15s on first run, then comes from the cache.</span></li>
+    <li>Each tool emits <code>tool_start</code> (status line) then <code>tool_result</code>; the browser renders results as the existing <b>QuoteCard</b> and <b>BriefView</b>, so the output matches the brief page.</li>
+    <li>With no more tool calls, the loop emits a <code>text</code> event: a short meeting-prep wrap-up: 3–5 talking points and likely client questions, citing 10-K Items from the brief.</li>
+    <li>Follow-up (“what did they say about tariffs?”) → <code>search_filing("AAPL", "tariffs")</code> → answer grounded in the returned paragraphs.</li>
+  </ol>
+</main>
+</body>
+</html>
